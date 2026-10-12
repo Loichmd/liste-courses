@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import type { Card } from './api'
 import { CardSheet } from './CardSheet'
+import { useImageUrls, type CardImages } from './images'
 import { normalize } from './normalize'
 
 type Props = {
   cards: Card[]
   ready: boolean
-  onAdd: (name: string, number: string) => void
-  onUpdate: (id: string, name: string, number: string) => void
+  onAdd: (name: string, number: string, images: CardImages) => void
+  onUpdate: (id: string, name: string, number: string, images: CardImages) => void
   onRemove: (card: Card) => void
 }
 
@@ -31,6 +32,7 @@ export function CardsView({ cards, ready, onAdd, onUpdate, onRemove }: Props) {
   const [query, setQuery] = useState('')
   const [sheet, setSheet] = useState<Sheet>(null)
 
+  const logoUrl = useImageUrls(cards.map((c) => c.logo_path))
   const q = normalize(query)
   // Recherche « contient » : sans accents ni majuscules, n'importe où dans le nom.
   const shown = useMemo(() => (q ? cards.filter((c) => normalize(c.name).includes(q)) : cards), [cards, q])
@@ -78,11 +80,15 @@ export function CardsView({ cards, ready, onAdd, onUpdate, onRemove }: Props) {
             {shown.map((card) => (
               <li key={card.id} className="row">
                 <button type="button" className="card-row" onClick={() => setSheet({ mode: 'edit', id: card.id })}>
-                  <span className="card-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24">
-                      <rect x="3" y="5.5" width="18" height="13" rx="3" />
-                      <path d="M3 10h18M7 15h4" />
-                    </svg>
+                  <span className={`card-icon${card.logo_path ? ' has-logo' : ''}`} aria-hidden="true">
+                    {card.logo_path ? (
+                      logoUrl(card.logo_path) && <img src={logoUrl(card.logo_path)} alt="" loading="lazy" />
+                    ) : (
+                      <svg viewBox="0 0 24 24">
+                        <rect x="3" y="5.5" width="18" height="13" rx="3" />
+                        <path d="M3 10h18M7 15h4" />
+                      </svg>
+                    )}
                   </span>
                   <span className="card-main">
                     <span className="card-name">
@@ -107,9 +113,9 @@ export function CardsView({ cards, ready, onAdd, onUpdate, onRemove }: Props) {
           key={editing?.id ?? 'new'}
           card={editing}
           onClose={() => setSheet(null)}
-          onSave={(name, number) => {
-            if (editing) onUpdate(editing.id, name, number)
-            else onAdd(name, number)
+          onSave={(name, number, images) => {
+            if (editing) onUpdate(editing.id, name, number, images)
+            else onAdd(name, number, images)
             setSheet(null)
           }}
           onDelete={() => {

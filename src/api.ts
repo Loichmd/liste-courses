@@ -13,11 +13,14 @@ export type Card = {
   id: string
   name: string
   number: string
+  logo_path: string | null // chemin du logo de l'enseigne dans le bucket card-images
+  photo_path: string | null // chemin de la photo de la carte
   created_at: string
 }
 
 const COLUMNS = 'id,name,search,checked,position,created_at'
-const CARD_COLUMNS = 'id,name,number,created_at'
+const CARD_COLUMNS = 'id,name,number,logo_path,photo_path,created_at'
+const BUCKET = 'card-images'
 
 export class ApiError extends Error {
   code?: string
@@ -82,19 +85,47 @@ export async function fetchCards(): Promise<Card[]> {
   return (data ?? []) as Card[]
 }
 
-export async function insertCard(card: Pick<Card, 'id' | 'name' | 'number'>): Promise<Card> {
+export async function insertCard(card: Pick<Card, 'id' | 'name' | 'number' | 'logo_path' | 'photo_path'>): Promise<Card> {
   const { id, name, number } = card
-  const { data, error } = await supabase.from('loyalty_cards').insert({ id, name, number }).select(CARD_COLUMNS).single()
+  const row = { id, name, number, logo_path: card.logo_path ?? null, photo_path: card.photo_path ?? null }
+  const { data, error } = await supabase.from('loyalty_cards').insert(row).select(CARD_COLUMNS).single()
   fail(error)
   return data as Card
 }
 
-export async function updateCard(id: string, patch: Partial<Pick<Card, 'name' | 'number'>>): Promise<void> {
+export async function updateCard(
+  id: string,
+  patch: Partial<Pick<Card, 'name' | 'number' | 'logo_path' | 'photo_path'>>,
+): Promise<void> {
   const { error } = await supabase.from('loyalty_cards').update(patch).eq('id', id)
   fail(error)
 }
 
 export async function deleteCard(id: string): Promise<void> {
   const { error } = await supabase.from('loyalty_cards').delete().eq('id', id)
+  fail(error)
+}
+
+/* ---------- Images des cartes (bucket privé) ---------- */
+
+export async function uploadImage(path: string, blob: Blob): Promise<void> {
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, blob, { contentType: blob.type, cacheControl: '31536000', upsert: false })
+  fail(error)
+}
+
+/** Adresses temporaires (1 h) pour afficher des images du bucket privé. */
+export async function signImages(paths: string[], expiresIn = 3600): Promise<Map<string, string>> {
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrls(paths, expiresIn)
+  fail(error)
+  const urls = new Map<string, string>()
+  for (const d of data ?? []) if (d.path && d.signedUrl) urls.set(d.path, d.signedUrl)
+  return urls
+}
+
+export async function removeImages(paths: string[]): Promise<void> {
+  if (paths.length === 0) return
+  const { error } = await supabase.storage.from(BUCKET).remove(paths)
   fail(error)
 }

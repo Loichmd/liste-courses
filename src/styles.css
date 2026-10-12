@@ -727,6 +727,8 @@ button:focus-visible,
   border: 0;
   border-radius: 22px;
   box-shadow: var(--shadow);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
 }
 
 .sheet::backdrop {
@@ -754,7 +756,7 @@ button:focus-visible,
   display: grid;
   grid-template-columns: minmax(0, 1fr); /* la colonne ne dépasse jamais la fenêtre */
   gap: 16px;
-  padding: 22px 18px 18px;
+  padding: 22px 18px 0;
 }
 
 .sheet h2 {
@@ -765,6 +767,7 @@ button:focus-visible,
 
 .field {
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* le champ ne déborde pas de sa colonne */
   gap: 6px;
   color: var(--muted);
   font-size: 0.9375rem;
@@ -772,6 +775,8 @@ button:focus-visible,
 }
 
 .field input {
+  width: 100%;
+  min-width: 0;
   height: 52px;
   padding: 0 14px;
   background: var(--bg);
@@ -790,11 +795,14 @@ button:focus-visible,
 }
 
 .sheet-actions {
+  position: sticky; /* les boutons restent visibles quand la fenêtre défile */
+  bottom: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  margin-top: 4px;
+  padding: 10px 0 18px;
+  background: var(--card);
 }
 
 .spacer {
@@ -831,6 +839,185 @@ button:focus-visible,
 
 .btn-danger {
   color: var(--strike);
+}
+
+.btn-small {
+  height: 38px;
+  font-size: 0.9375rem;
+}
+
+/* Logo de l'enseigne à côté du nom */
+.identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.identity .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.logo-slot {
+  position: relative;
+  flex: none;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 76px;
+}
+
+.logo-tile {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  background: var(--bg);
+  border: 1.5px dashed var(--line);
+  border-radius: 18px;
+  color: var(--muted);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* Fond blanc fixe : un logo sombre reste lisible en thème sombre. */
+.logo-tile.has-image {
+  background: #fff;
+  border-style: solid;
+}
+
+.logo-tile img {
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  object-fit: contain;
+}
+
+.logo-tile svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.slot-caption {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.slot-remove {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.slot-remove svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+/* Photo de la carte */
+.field-block {
+  display: grid;
+  gap: 6px;
+}
+
+.field-label {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.photo-empty {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 128px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1.5px dashed var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.photo-empty svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.photo-frame {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.photo-frame.is-loading {
+  aspect-ratio: 85.6 / 54;
+}
+
+.photo-frame img {
+  display: block;
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.photo-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.sheet-error {
+  margin: 0;
+  color: var(--strike);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+/* Logo dans la liste des cartes */
+.card-icon.has-logo {
+  background: #fff;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.card-icon img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
 }
 
 /* Croix d'effacement du champ de recherche, aux couleurs de l'app */
