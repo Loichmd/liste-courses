@@ -1,0 +1,12 @@
+{
+  "name": "Courses",
+  "short_name": "Courses",
+  "description": "Ma liste de courses",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f1f4ef",
+  "theme_color": "#f1f4ef",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
