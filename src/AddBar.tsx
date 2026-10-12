@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { searchItems } from './api'
 import type { Item } from './api'
 import { normalize } from './normalize'
@@ -6,17 +6,29 @@ import { normalize } from './normalize'
 type Props = {
   items: Item[]
   onAdd: (name: string) => void
+  placeholder?: string
+  /** Liste de suggestions dans le flux de la page (fenêtre de saisie), au lieu d'une liste flottante. */
+  inline?: boolean
+  /** Texte tapé mais pas encore ajouté (pour ne pas le perdre à l'enregistrement d'une fiche). */
+  onDraft?: (text: string) => void
 }
 
 type Row = { kind: 'item'; item: Item } | { kind: 'create'; name: string }
 
-export function AddBar({ items, onAdd }: Props) {
-  const [value, setValue] = useState('')
+export function AddBar({ items, onAdd, placeholder = 'Ajouter un article', inline = false, onDraft }: Props) {
+  const [value, setRaw] = useState('')
+  const listId = useId()
   const [open, setOpen] = useState(false)
   const [cursor, setCursor] = useState(-1)
   const [remote, setRemote] = useState<{ query: string; rows: Item[] } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
   const seq = useRef(0)
+
+  function setValue(next: string) {
+    setRaw(next)
+    onDraft?.(next)
+  }
 
   const query = normalize(value)
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items])
@@ -72,13 +84,24 @@ export function AddBar({ items, onAdd }: Props) {
       const row = cursor >= 0 ? rows[cursor] : undefined
       submit(row?.kind === 'item' ? row.item.name : value)
     } else if (e.key === 'Escape') {
-      if (open && rows.length) setOpen(false)
-      else setValue('')
+      // Ce qui est géré ici ne ferme pas la fenêtre qui contient la barre.
+      if (open && rows.length) {
+        e.preventDefault()
+        setOpen(false)
+      } else if (value) {
+        e.preventDefault()
+        setValue('')
+      }
     }
   }
 
   const showList = open && rows.length > 0
   const typedLength = value.trim().length
+
+  // Dans une fenêtre, les suggestions s'affichent sous la barre : on les ramène à l'écran si elles sont coupées.
+  useEffect(() => {
+    if (inline && showList) listRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [inline, showList, rows.length])
 
   return (
     <div className="addbar">
@@ -97,11 +120,11 @@ export function AddBar({ items, onAdd }: Props) {
           onFocus={() => setOpen(true)}
           onBlur={() => setOpen(false)}
           onKeyDown={onKeyDown}
-          placeholder="Ajouter un article"
-          aria-label="Ajouter un article"
+          placeholder={placeholder}
+          aria-label={placeholder}
           role="combobox"
           aria-expanded={showList}
-          aria-controls="suggestions"
+          aria-controls={listId}
           aria-autocomplete="list"
           autoComplete="off"
           autoCorrect="off"
@@ -123,7 +146,7 @@ export function AddBar({ items, onAdd }: Props) {
       </div>
 
       {showList && (
-        <ul id="suggestions" className="suggest" role="listbox">
+        <ul ref={listRef} id={listId} className={`suggest${inline ? ' suggest-inline' : ''}`} role="listbox">
           {rows.map((row, idx) => {
             const selected = idx === cursor
             if (row.kind === 'create') {

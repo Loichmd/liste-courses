@@ -47,6 +47,8 @@ export function useItems(showToast: ShowToast) {
         if (existing.checked) {
           const position = topPosition()
           stopLeaving(existing.id)
+          // La référence est mise à jour tout de suite : plusieurs ajouts d'affilée (aliments d'un repas) restent distincts.
+          itemsRef.current = itemsRef.current.map((i) => (i.id === existing.id ? { ...i, checked: false, position } : i))
           setItems((p) => p.map((i) => (i.id === existing.id ? { ...i, checked: false, position } : i)))
           void sync(() => api.updateItem(existing.id, { checked: false, position }))
         }
@@ -62,6 +64,7 @@ export function useItems(showToast: ShowToast) {
         position: topPosition(),
         created_at: new Date().toISOString(),
       }
+      itemsRef.current = [item, ...itemsRef.current]
       setItems((p) => [item, ...p])
       flash(item.id)
       void sync(async () => {

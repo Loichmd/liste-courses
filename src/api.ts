@@ -18,8 +18,18 @@ export type Card = {
   created_at: string
 }
 
+export type Meal = {
+  id: string
+  day: string // AAAA-MM-JJ
+  title: string
+  description: string
+  foods: string[] // noms d'aliments, ajoutés à la liste de courses à l'enregistrement
+  created_at: string
+}
+
 const COLUMNS = 'id,name,search,checked,position,created_at'
 const CARD_COLUMNS = 'id,name,number,logo_path,photo_path,created_at'
+const MEAL_COLUMNS = 'id,day,title,description,foods,created_at'
 const BUCKET = 'card-images'
 
 export class ApiError extends Error {
@@ -103,6 +113,35 @@ export async function updateCard(
 
 export async function deleteCard(id: string): Promise<void> {
   const { error } = await supabase.from('loyalty_cards').delete().eq('id', id)
+  fail(error)
+}
+
+/* ---------- Agenda des repas ---------- */
+
+export async function fetchMeals(): Promise<Meal[]> {
+  // Les plus récents d'abord si la table devient grande ; l'application trie par jour.
+  const { data, error } = await supabase.from('meals').select(MEAL_COLUMNS).order('day', { ascending: false }).limit(1000)
+  fail(error)
+  return (data ?? []) as Meal[]
+}
+
+export async function insertMeal(meal: Pick<Meal, 'id' | 'day' | 'title' | 'description' | 'foods'>): Promise<Meal> {
+  const { id, day, title, description, foods } = meal
+  const { data, error } = await supabase.from('meals').insert({ id, day, title, description, foods }).select(MEAL_COLUMNS).single()
+  fail(error)
+  return data as Meal
+}
+
+export async function updateMeal(
+  id: string,
+  patch: Partial<Pick<Meal, 'day' | 'title' | 'description' | 'foods'>>,
+): Promise<void> {
+  const { error } = await supabase.from('meals').update(patch).eq('id', id)
+  fail(error)
+}
+
+export async function deleteMeal(id: string): Promise<void> {
+  const { error } = await supabase.from('meals').delete().eq('id', id)
   fail(error)
 }
 
