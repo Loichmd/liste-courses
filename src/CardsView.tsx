@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Card } from './api'
+import { CardDetail } from './CardDetail'
 import { CardSheet } from './CardSheet'
 import { useImageUrls, type CardImages } from './images'
 import { normalize } from './normalize'
@@ -12,7 +13,8 @@ type Props = {
   onRemove: (card: Card) => void
 }
 
-type Sheet = { mode: 'new' } | { mode: 'edit'; id: string } | null
+// Toucher une carte l'ouvre en lecture seule (« view ») ; on ne la modifie (« edit ») qu'en touchant « Modifier ».
+type Sheet = { mode: 'new' } | { mode: 'view'; id: string } | { mode: 'edit'; id: string } | null
 
 /** Met en évidence la partie du nom qui correspond à la recherche. */
 function Highlight({ text, query }: { text: string; query: string }) {
@@ -36,8 +38,9 @@ export function CardsView({ cards, ready, onAdd, onUpdate, onRemove }: Props) {
   const q = normalize(query)
   // Recherche « contient » : sans accents ni majuscules, n'importe où dans le nom.
   const shown = useMemo(() => (q ? cards.filter((c) => normalize(c.name).includes(q)) : cards), [cards, q])
-  const editing = sheet?.mode === 'edit' ? (cards.find((c) => c.id === sheet.id) ?? null) : null
-  const sheetOpen = sheet?.mode === 'new' || (sheet?.mode === 'edit' && editing !== null)
+  const current = sheet && sheet.mode !== 'new' ? (cards.find((c) => c.id === sheet.id) ?? null) : null
+  const viewing = sheet?.mode === 'view' ? current : null
+  const editing = sheet?.mode === 'edit' ? current : null
 
   return (
     <>
@@ -79,7 +82,7 @@ export function CardsView({ cards, ready, onAdd, onUpdate, onRemove }: Props) {
           <ul className="list" aria-label="Cartes de fidélité">
             {shown.map((card) => (
               <li key={card.id} className="row">
-                <button type="button" className="card-row" onClick={() => setSheet({ mode: 'edit', id: card.id })}>
+                <button type="button" className="card-row" onClick={() => setSheet({ mode: 'view', id: card.id })}>
                   <span className={`card-icon${card.logo_path ? ' has-logo' : ''}`} aria-hidden="true">
                     {card.logo_path ? (
                       logoUrl(card.logo_path) && <img src={logoUrl(card.logo_path)} alt="" loading="lazy" />
@@ -108,15 +111,29 @@ export function CardsView({ cards, ready, onAdd, onUpdate, onRemove }: Props) {
         )}
       </main>
 
-      {sheetOpen && (
-        <CardSheet
-          key={editing?.id ?? 'new'}
-          card={editing}
+      {viewing && (
+        <CardDetail
+          key={`view-${viewing.id}`}
+          card={viewing}
+          onEdit={() => setSheet({ mode: 'edit', id: viewing.id })}
           onClose={() => setSheet(null)}
+        />
+      )}
+
+      {(sheet?.mode === 'new' || editing) && (
+        <CardSheet
+          key={editing ? `edit-${editing.id}` : 'new'}
+          card={editing}
+          // Annuler une modification ramène à la fiche ; annuler un ajout referme la fenêtre.
+          onClose={() => setSheet(editing ? { mode: 'view', id: editing.id } : null)}
           onSave={(name, number, images) => {
-            if (editing) onUpdate(editing.id, name, number, images)
-            else onAdd(name, number, images)
-            setSheet(null)
+            if (editing) {
+              onUpdate(editing.id, name, number, images)
+              setSheet({ mode: 'view', id: editing.id }) // on revoit la fiche, mise à jour
+            } else {
+              onAdd(name, number, images)
+              setSheet(null)
+            }
           }}
           onDelete={() => {
             if (editing) onRemove(editing)

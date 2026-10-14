@@ -1318,6 +1318,81 @@ button:focus-visible,
   margin-top: 2px;
 }
 
+/* Fiche d'une carte, en lecture seule */
+.view-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.view-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+}
+
+.view-logo svg {
+  width: 30px;
+  height: 30px;
+}
+
+.view-id {
+  flex: 1;
+  min-width: 0;
+}
+
+.view-id h2 {
+  overflow-wrap: anywhere;
+}
+
+.view-number {
+  margin: 2px 0 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+  user-select: all; /* un toucher long sélectionne tout le numéro */
+}
+
+.view-number.is-empty {
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  user-select: auto;
+}
+
+.view-photo {
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.view-photo.is-loading {
+  aspect-ratio: 85.6 / 54;
+}
+
+.view-photo img {
+  display: block;
+  width: 100%;
+  max-height: min(62dvh, 520px);
+  object-fit: contain;
+}
+
+.view-nophoto {
+  margin: 0;
+  padding: 22px 16px;
+  background: var(--bg);
+  border: 1.5px dashed var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-align: center;
+}
+
 /* Croix d'effacement du champ de recherche, aux couleurs de l'app */
 .addbar-field input[type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;

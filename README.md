@@ -26,8 +26,8 @@ Onglet « Repas » (lien direct : `#repas`). Une semaine à la fois, du lundi au
 Onglet « Cartes » (lien direct : `#cartes`).
 
 - **Recherche** par nom, de type « contient » (sans tenir compte des majuscules ni des accents).
-- **Ajouter** avec le bouton « + », **modifier** en touchant une carte, **supprimer** depuis la fiche (avec « Annuler »).
-- **Logo de l'enseigne** (à côté du nom) et **photo de la carte** : à choisir dans la photothèque ou à prendre avec l'appareil photo. Le logo s'affiche dans la liste, la photo en grand dans la fiche. Chaque image peut être remplacée ou retirée.
+- **Ajouter** avec le bouton « + ». Toucher une carte ouvre sa **fiche en lecture seule** (logo, nom, numéro et photo en grand) : rien ne change tant qu'on ne touche pas « Modifier ». C'est dans le formulaire de modification qu'on change les infos ou qu'on **supprime** la carte (avec « Annuler »).
+- **Logo de l'enseigne** (à côté du nom) et **photo de la carte** : à choisir dans la photothèque ou à prendre avec l'appareil photo. Le logo s'affiche dans la liste, la photo en grand dans la fiche de la carte. Chaque image peut être remplacée ou retirée.
 - Les images sont réduites dans le navigateur avant l'envoi (logo 256 px, photo 1400 px).
 
 Tout est enregistré dans Supabase : la liste et les cartes sont les mêmes sur tous vos appareils.
