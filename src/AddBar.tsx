@@ -24,6 +24,10 @@ export function AddBar({ items, onAdd, placeholder = 'Ajouter un article', inlin
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const seq = useRef(0)
+  // Doigt posé sur « Ajouter » ou sur une suggestion : selon le navigateur (iPhone notamment), le champ perd alors le focus
+  // avant que le toucher ne devienne un clic. La liste ne doit pas se fermer à ce moment-là, sinon le clic est perdu.
+  const pressing = useRef(false)
+  const releaseTimer = useRef<number>()
 
   function setValue(next: string) {
     setRaw(next)
@@ -62,11 +66,32 @@ export function AddBar({ items, onAdd, placeholder = 'Ajouter un article', inlin
     return list
   }, [query, remote, items, byId, value])
 
+  function endPress() {
+    window.clearTimeout(releaseTimer.current)
+    releaseTimer.current = window.setTimeout(() => {
+      pressing.current = false
+      // Le doigt a glissé sans cliquer (défilement) : le champ n'a plus le focus, on referme la liste.
+      if (document.activeElement !== inputRef.current) setOpen(false)
+    }, 400)
+  }
+
+  /** À poser sur chaque élément qu'on peut toucher sans quitter le champ (bouton « Ajouter », suggestions). */
+  const touchable = {
+    onPointerDown: () => {
+      window.clearTimeout(releaseTimer.current)
+      pressing.current = true
+    },
+    onPointerUp: endPress,
+    onPointerCancel: endPress,
+    onMouseDown: (e: React.MouseEvent) => e.preventDefault(), // ordinateur et Android : le champ garde le focus
+  }
+
   function submit(name: string) {
     if (!normalize(name)) return
     onAdd(name)
     setValue('')
     setCursor(-1)
+    pressing.current = false
     inputRef.current?.focus()
   }
 
@@ -118,7 +143,9 @@ export function AddBar({ items, onAdd, placeholder = 'Ajouter un article', inlin
             setOpen(true)
           }}
           onFocus={() => setOpen(true)}
-          onBlur={() => setOpen(false)}
+          onBlur={() => {
+            if (!pressing.current) setOpen(false)
+          }}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
           aria-label={placeholder}
@@ -137,7 +164,7 @@ export function AddBar({ items, onAdd, placeholder = 'Ajouter un article', inlin
           <button
             type="button"
             className="addbar-submit"
-            onPointerDown={(e) => e.preventDefault()}
+            {...touchable}
             onClick={() => submit(value)}
           >
             Ajouter
@@ -156,7 +183,7 @@ export function AddBar({ items, onAdd, placeholder = 'Ajouter un article', inlin
                   role="option"
                   aria-selected={selected}
                   className={`suggest-row suggest-create${selected ? ' is-selected' : ''}`}
-                  onPointerDown={(e) => e.preventDefault()}
+                  {...touchable}
                   onClick={() => submit(row.name)}
                 >
                   <span>
@@ -173,7 +200,7 @@ export function AddBar({ items, onAdd, placeholder = 'Ajouter un article', inlin
                 role="option"
                 aria-selected={selected}
                 className={`suggest-row${selected ? ' is-selected' : ''}`}
-                onPointerDown={(e) => e.preventDefault()}
+                {...touchable}
                 onClick={() => submit(item.name)}
               >
                 <span>
